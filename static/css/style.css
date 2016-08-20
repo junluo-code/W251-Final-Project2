@@ -1,0 +1,69 @@
+.navbar .brand, .navbar .nav > li > a {
+    color: #777 !important;
+}
+
+.navbar-default .navbar-brand {
+    color: red !important;
+}
+
+.navbar .brand, .navbar .nav > li > a:hover {
+    color: red !important;
+}
+
+#mapid {
+    height: 800px;
+    width: 100%;
+}
+
+#mapDash {
+    height: 350px;
+    width: 100%;
+}
+
+table, td, tr {
+    padding: 5px !important;
+
+}
+
+.eventDetail, td {
+    width: 95%;
+    border: grey solid 1px;
+    border-collapse: collapse;
+
+}
+
+.sectionHeader {
+    background-color: #566573;
+    color: white;
+    font-size: 20px;
+}
+
+.leftCell {
+    width: 50px;
+
+}
+
+div .container {
+    width: 100% !important;
+}
+
+div .col-xs-8 {
+    padding-left: 0px !important;
+}
+
+.smallChart {
+    background-color: whitesmoke;
+    padding: 10px;
+}
+
+.wideChart {
+
+    background-color: whitesmoke;
+    padding: 10px;
+}
+
+.chartArea{
+    border: solid 1px darkgrey;
+    background-color: white;
+    height: 400px;
+}

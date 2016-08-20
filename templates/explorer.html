@@ -1,0 +1,226 @@
+{% extends "layout.html" %}
+{% block content %}
+
+    <div>
+
+
+        <div class="row">
+            <div class="col-md-8">
+                <div id="mapid"></div>
+            </div>
+            <div class="col-md-4">
+
+                <div id="eventDetail">
+                    <table class="eventDetail">
+
+                        <tr>
+                            <td colspan="2">
+
+                                <div class="container">
+                                    <div class="row">
+                                        <div class="col-xs-13 col-xs-offset-0">
+                                            <div class="input-group">
+                                                <div class="input-group-btn search-panel">
+                                                    <button type="button" class="btn btn-default dropdown-toggle"
+                                                            data-toggle="dropdown">
+                                                        <span id="search_concept">Search by</span> <span
+                                                            class="caret"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu" role="menu">
+                                                        <li><a href="#ByCity">City</a></li>
+                                                        <li><a href="#ByTopic">Topic</a></li>
+                                                    </ul>
+                                                </div>
+                                                <input type="hidden" name="search_param" value="all" id="search_param">
+                                                <input id="searchBox" type="text" class="form-control" name="x"
+                                                       placeholder="Search term...">
+                                                <span class="input-group-btn">
+                                                    <button id="searchButton" class="btn btn-default"
+                                                            type="button"><span
+                                                            class="glyphicon glyphicon-search"></span></button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="sectionHeader">Event</td>
+                        </tr>
+                        <tr>
+                            <td class="leftCell">Name:</td>
+                            <td id="eventName"></td>
+                        </tr>
+                        <tr>
+                            <td class="leftCell">Date & Time:</td>
+                            <td id="eventDateTime"></td>
+                        </tr>
+                        <tr>
+                            <td class="leftCell">URL:</td>
+                            <td><a id="eventUrl" href="" target="_new"></a>
+                            </td>
+                        <tr>
+                            <td class="leftCell">Attendance:</td>
+                            <td id="eventAttendance">TBD(calculated from backend)</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="sectionHeader">Venue</td>
+                        </tr>
+                        <tr>
+                            <td id="venueName" colspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="sectionHeader">Topic(s)</td>
+                        </tr>
+                        <tr>
+                            <td id="topics" colspan="2">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">Auto refresh&nbsp;<input id="refreshToggle" type="checkbox" data-toggle="toggle"></td>
+                        </tr>
+                    </table>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+    </div>
+
+    <script>
+
+        var rsvps = [];
+        var mymap = L.map('mapid').setView([39.8333333, -98.585522], 5);
+        var markers = new Array();
+
+        $.ajax({
+            url: "/rsvp",
+            dataType: "text",
+            success: function (data) {
+                rsvps = JSON.parse(data);
+                //console.log(rsvps.length);
+            }
+
+        })
+                .then(function () {
+                    ShowVenues(rsvps);
+                });
+
+
+        function ShowVenues(rsvps) {
+            //var mymap = L.map('mapid').setView([39.8333333, -98.585522], 5);
+            //var markers = new Array();
+
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
+                maxZoom: 18,
+                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+                id: 'mapbox.streets'
+            }).addTo(mymap);
+
+            for (var i = 0; i < rsvps.length; i++) {
+                if (rsvps[i].venue != undefined) {
+                    //console.log(rsvps[i].venue)
+                    var v = rsvps[i].venue;
+                    //console.log(v.lat + "...." + v.lon);
+                    markers.push(new L.marker([v.lat, v.lon]));
+                }
+            }
+
+            for (var j = 0; j < markers.length; j++) {
+                markers[j].on('click', onMarkerClick);
+                mymap.addLayer(markers[j]);
+            }
+        }
+
+
+        function onMarkerClick(e) {
+
+            var selectedMarker = this.getLatLng();
+
+            for (var i = 0; i < rsvps.length; i++) {
+                if (rsvps[i].venue != undefined) {
+
+                    var venue = rsvps[i].venue
+                    if (selectedMarker.lat == venue.lat && selectedMarker.lng == venue.lon) {
+
+                        updateEventDetail(rsvps[i]);
+
+                    }
+                }
+            }
+
+            //this.valueOf()._icon.style.color = 'green';
+
+        }
+
+        function updateEventDetail(rsvp) {
+
+
+            var venue = rsvp.venue;
+            var event = rsvp.event;
+            var group = rsvp.group;
+
+
+            $("#eventName").html(event.event_name);
+            $("#eventDateTime").html(new Date(event.time));
+            $("#eventUrl").html(event.event_url);
+            $("#eventUrl").attr('href', event.event_url);
+            $("#eventAttendance").html("");
+
+            var venue = venue.venue_name;
+            venue += ", " + group.group_city + ", " + group.group_state + ", " + group.group_country.toUpperCase();
+            $("#venueName").html(venue);
+
+            var topics = group.group_topics;
+            var topicsString = '';
+            for (var i = 0; i < topics.length; i++) {
+                topicsString += "<a href='#'>" + topics[i].topic_name + "</a>, ";
+            }
+
+            $("#topics").html(topicsString);
+
+            //console.log(venue);
+            //console.log(event);
+            //console.log(group.group_topics);
+        }
+
+        $('.search-panel .dropdown-menu').find('a').click(function (e) {
+            e.preventDefault();
+            var param = $(this).attr("href").replace("#", "");
+            var concept = $(this).text();
+            $('.search-panel span#search_concept').text(concept);
+            $('.input-group #search_param').val(param);
+        });
+
+        $("#searchButton").click(function (e) {
+            var searchType = $('.search-panel span#search_concept').text();
+            var searchText = $('#searchBox').val();
+            alert("you searched " + searchType + " for " + searchText);
+        });
+
+        $("#refreshToggle").change(function () {
+            alert("Auto refresh is set to " + $(this).prop('checked') );
+        });
+
+    </script>
+
+{% endblock %}
