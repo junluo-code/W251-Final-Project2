@@ -67,3 +67,11 @@ div .col-xs-8 {
     background-color: white;
     height: 400px;
 }
+
+.oddRow{
+    background-color: lightyellow;
+}
+
+.evenRow{
+    background-color: white;
+}

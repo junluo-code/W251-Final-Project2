@@ -26,6 +26,10 @@ def flot():
 def rsvp():
     return app.send_static_file("rsvps.json")
 
+@app.route('/top10topics')
+def top10topics():
+    return app.send_static_file("top10topics.json")
+
 
 @app.route('/api/venue',  methods=['GET'])
 def get_venues():
