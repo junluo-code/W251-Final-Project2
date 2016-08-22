@@ -4,7 +4,7 @@
 
     <div class="container-fluid">
     <div class="row" style="height:350px;">
-        <div class="col-md-8">
+        <div class="col-md-6">
             <div class="panel">
                 <div class="panel-body">
                     <h3 class="title-hero">
@@ -16,7 +16,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="panel">
                 <div class="panel-body">
                     <h3 class="title-hero">
@@ -159,54 +159,18 @@
         //Refresh #RSVP stream
         $(function () {
 
-            // We use an inline data source in the example, usually data would
-            // be fetched from a server
+            var updateInterval = 50;
+            var totalPoints = 100;
+            var dataset = [];
+            var startTime = "2016-08-22T09:43:00.000Z";
 
-            var data = [],
-                    totalPoints = 300;
-
-            function getRandomData() {
-
-                if (data.length > 0)
-                    data = data.slice(1);
-
-                // Do a random walk
-
-                while (data.length < totalPoints) {
-
-                    var prev = data.length > 0 ? data[data.length - 1] : 50,
-                            y = prev + Math.random() * 10 - 5;
-
-                    if (y < 0) {
-                        y = 0;
-                    } else if (y > 100) {
-                        y = 100;
-                    }
-
-                    data.push(y);
-                }
-
-                // Zip the generated y values with the x values
-
-                var res = [];
-                for (var i = 0; i < data.length; ++i) {
-                    res.push([i, data[i]])
-                }
-
-                return res;
-            }
-
-            // Set up the control widget
-
-            var updateInterval = 30;
-
-            var plot = $.plot("#data-example-3", [getRandomData()], {
+            var options = {
 
                 series: {
                     lines: {
                         show: true,
                         lineWidth: 2,
-                        fill: 0.5,
+                        fill: 0.7,
                         fillColor: {colors: [{opacity: 0.01}, {opacity: 0.08}]}
                     },
                     shadowSize: 0   // Drawing is faster without shadows
@@ -220,24 +184,73 @@
                 },
                 yaxis: {
                     min: 0,
-                    max: 120,
+                    max: 30,
                     tickColor: 'rgba(0, 0, 0, 0.06)', font: {color: 'rgba(0, 0, 0, 0.4)'}
                 },
-                xaxis: {show: false},
+                xaxis: {show: false, mode: "time"},
                 colors: [getUIColor('default'), getUIColor('gray')]
-            });
+            };
 
-            function update() {
 
-                plot.setData([getRandomData()]);
+            function getData(t) {
 
-                // Since the axes don't change, we don't need to call plot.setupGrid()
+                var apiUrl = "http://dse-01.meetlytix.com:3000/getRSVPCount/" + t;
+                //console.log(apiUrl);
 
-                plot.draw();
-                setTimeout(update, updateInterval);
+                //set no cache
+                $.ajaxSetup({cache: false});
+
+                $.ajax({
+                    url: apiUrl,
+                    crossDomain: true,
+                    dataType: "json",
+                    success: update
+
+                });
+
             }
 
-            update();
+            //getData(startTime);
+
+            function update(_data) {
+
+
+                //console.log("before: " + dataset.length);
+                if (dataset.length > totalPoints)
+                    dataset = dataset.slice(1);
+                //console.log("after: " + dataset.length);
+
+                var latestTime = _data.rows[_data.rows.length - 1].time;
+                // console.log(latestTime);
+
+                for (var i = 0; i < _data.rows.length; i++) {
+                    dataset.push(_data.rows[i].count);
+                }
+
+                while (dataset.length < totalPoints) {
+                    getData(latestTime);
+                }
+
+                //console.log(dataset.length);
+                var res = [];
+                for (var i = 0; i < totalPoints; ++i) {
+                    res.push([i, dataset[i]])
+                }
+
+                console.log(res);
+                $.plot("#data-example-3", [res], options);
+
+
+                setTimeout(getData(latestTime), updateInterval);
+            }
+
+
+            getData(startTime);
+            $.plot("#data-example-3", [dataset], options);
+
+            //setTimeout(getData(startTime), updateInterval);
+
+            //update();
 
         });
 
@@ -248,7 +261,7 @@
             // be fetched from a server
 
             var data = [],
-                    totalPoints = 300;
+                    totalPoints = 100;
 
             function getRandomData() {
 
@@ -278,6 +291,7 @@
                     res.push([i, data[i]])
                 }
 
+                //console.log(res);
                 return res;
             }
 
@@ -314,7 +328,9 @@
 
             function update() {
 
-                plot.setData([getRandomData()]);
+                var x = getRandomData();
+                console.log(x.length);
+                plot.setData([x]);
 
                 // Since the axes don't change, we don't need to call plot.setupGrid()
 
